@@ -55,12 +55,13 @@ steps:
       projects: $(RootProject)
       arguments: "--configuration $(BuildConfiguration) --no-restore --verbosity $(BuildVerbosity)"
 
-  - task: DotNetCoreCLI@2
-    displayName: Test Projects - $(BuildConfiguration)
-    inputs:
-      command: test
-      projects: $(RootProject)
-      arguments: "--configuration $(BuildConfiguration) --no-build --verbosity $(BuildVerbosity)"
+  # Skip test for now
+  # - task: DotNetCoreCLI@2
+  #   displayName: Test Projects - $(BuildConfiguration)
+  #   inputs:
+  #     command: test
+  #     projects: $(RootProject)
+  #     arguments: "--configuration $(BuildConfiguration) --no-build --verbosity $(BuildVerbosity)"
 
   - powershell: |
       Get-ChildItem -File -Filter "*.nupkg" -Recurse | ForEach-Object {
