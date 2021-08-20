@@ -2,6 +2,8 @@
 
 [![Build Status](https://dev.azure.com/vicey/GithubProjectsCICD/_apis/build/status/yhvicey.Microsoft.Extensions.Configuration.Referencing?branchName=main)](https://dev.azure.com/vicey/GithubProjectsCICD/_build/latest?definitionId=11&branchName=main)
 
+[![NuGet Status](https://buildstats.info/nuget/yiwwan.Microsoft.Extensions.Configuration.Referencing)](https://buildstats.info/nuget/yiwwan.Microsoft.Extensions.Configuration.Referencing)
+
 This packages allows users of `Microsoft.Extensions.Configuration.*` packages to reference config values within same configuration instance, e.g.:
 
 ```json
