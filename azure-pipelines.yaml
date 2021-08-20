@@ -65,10 +65,11 @@ steps:
 
   - powershell: |
       Get-ChildItem -File -Filter "*.nupkg" -Recurse | ForEach-Object {
-        if (-not (Test-Path $(DropFolder))) {
-          New-Item -ItemType Directory -Path $(DropFolder)
+        $packageFolder = "$(DropFolder)/packages";
+        if (-not (Test-Path $packageFolder)) {
+          New-Item -ItemType Directory -Path $packageFolder;
         }
-        $target = "$(DropFolder)/packages/$($_.Name)";
+        $target = "$packageFolder/$($_.Name)";
         if (Test-Path $target) {
           Remove-Item $target -Force;
         }
