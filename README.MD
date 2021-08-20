@@ -16,14 +16,10 @@ This packages allows users of `Microsoft.Extensions.Configuration.*` packages to
 
 // appsettings.json
 {
-  // Will be resolved to 123
-  "Key1": "$(Variables:Value1)",
-  // Will be resolved to false
-  "Key2": "$(Variables:Value2)",
-  // Will be resolved to "789"
-  "Key3": "$(Variables:Value3)",
-  // Will be resolved to null
-  "Key4": "$(Variables:Value4)"
+  "Key1": "$(Variables:Value1)", // Will be resolved to 123
+  "Key2": "$(Variables:Value2)", // Will be resolved to false
+  "Key3": "$(Variables:Value3)", // Will be resolved to "789"
+  "Key4": "$(Variables:Value4)" // Will be resolved to null
 }
 ```
 
