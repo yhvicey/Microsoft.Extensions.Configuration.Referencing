@@ -16,23 +16,22 @@ namespace Microsoft.Extensions.Configuration
             matchingPattern ??= ReferenceMatchingPattern;
             configPathSelector ??= match => match.Groups[1].Value;
             defaultValueSelector ??= match => match.Groups[3].Value;
+
             foreach (var kvp in configuration.AsEnumerable())
             {
                 if (kvp.Value == null)
                 {
                     continue;
                 }
-                var match = matchingPattern.Match(kvp.Value);
-                if (!match.Success)
+                var replacedValue = matchingPattern.Replace(kvp.Value, match =>
                 {
-                    continue;
-                }
-                var configPath = configPathSelector(match);
-                var defaultValue = defaultValueSelector(match);
-                var configValue = configuration[configPath] ?? defaultValue;
+                    var configPath = configPathSelector(match);
+                    var defaultValue = defaultValueSelector(match);
+                    return configuration[configPath] ?? defaultValue;
+                });
                 try
                 {
-                    configuration[kvp.Key] = configValue;
+                    configuration[kvp.Key] = replacedValue;
                 }
                 catch (InvalidOperationException)
                 {
@@ -42,7 +41,7 @@ namespace Microsoft.Extensions.Configuration
                         {
                             try
                             {
-                                provider.Set(kvp.Key, configValue);
+                                provider.Set(kvp.Key, replacedValue);
                             }
                             catch (InvalidOperationException)
                             {
@@ -51,6 +50,7 @@ namespace Microsoft.Extensions.Configuration
                     }
                 }
             }
+
             return configuration;
         }
     }
