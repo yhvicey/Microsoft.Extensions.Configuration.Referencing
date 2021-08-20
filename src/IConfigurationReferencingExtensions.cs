@@ -5,7 +5,7 @@ namespace Microsoft.Extensions.Configuration
 {
     public static class IConfigurationReferencingExtensions
     {
-        private static readonly Regex ReferenceMatchingPattern = new Regex(@"\$\(([\w:]+?)\)");
+        private static readonly Regex ReferenceMatchingPattern = new Regex(@"\$\(([\w:]+?)\)", RegexOptions.Compiled);
 
         public static IConfiguration ResolveReferences(this IConfiguration configuration)
         {
@@ -16,26 +16,27 @@ namespace Microsoft.Extensions.Configuration
                     continue;
                 }
                 var match = ReferenceMatchingPattern.Match(kvp.Value);
-                if (match.Success)
+                if (!match.Success)
                 {
-                    var configPath = match.Groups[1].Value;
-                    try
+                    continue;
+                }
+                var configPath = match.Groups[1].Value;
+                try
+                {
+                    configuration[kvp.Key] = configuration[configPath];
+                }
+                catch (InvalidOperationException)
+                {
+                    if (configuration is IConfigurationRoot configurationRoot)
                     {
-                        configuration[kvp.Key] = configuration[configPath];
-                    }
-                    catch (InvalidOperationException)
-                    {
-                        if (configuration is IConfigurationRoot configurationRoot)
+                        foreach (var provider in configurationRoot.Providers)
                         {
-                            foreach (var provider in configurationRoot.Providers)
+                            try
                             {
-                                try
-                                {
-                                    provider.Set(kvp.Key, configuration[configPath]);
-                                }
-                                catch (InvalidOperationException)
-                                {
-                                }
+                                provider.Set(kvp.Key, configuration[configPath]);
+                            }
+                            catch (InvalidOperationException)
+                            {
                             }
                         }
                     }
