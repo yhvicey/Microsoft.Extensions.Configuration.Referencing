@@ -13,7 +13,4 @@ Console.WriteLine($"Value of Key1: {configuration["Key1"]}");
 Console.WriteLine($"Value of Key2: {configuration["Key2"]}");
 Console.WriteLine($"Value of Key3: {configuration["Key3"]}");
 Console.WriteLine($"Value of non-existing key Key4: {configuration["Key4"]}");
-if (!string.IsNullOrEmpty(environment))
-{
-    Console.WriteLine($"Value of key Key5 in environment {environment}: {configuration["Key5"]}");
-}
+Console.WriteLine($"Value of key Key5 in environment {environment ?? "(empty)"}: {configuration["Key5"]}");

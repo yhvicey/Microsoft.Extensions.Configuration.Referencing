@@ -5,15 +5,17 @@ namespace Microsoft.Extensions.Configuration
 {
     public static class IConfigurationReferencingExtensions
     {
-        private static readonly Regex ReferenceMatchingPattern = new Regex(@"\$\(([\w:]+?)\)", RegexOptions.Compiled);
+        private static readonly Regex ReferenceMatchingPattern = new Regex(@"\$\(([\w:]+?)(,([^)]*))?\)", RegexOptions.Compiled);
 
         public static IConfiguration ResolveReferences(
             this IConfiguration configuration,
             Regex? matchingPattern = null,
-            Func<Match, string>? configPathSelector = null)
+            Func<Match, string>? configPathSelector = null,
+            Func<Match, string>? defaultValueSelector = null)
         {
             matchingPattern ??= ReferenceMatchingPattern;
             configPathSelector ??= match => match.Groups[1].Value;
+            defaultValueSelector ??= match => match.Groups[3].Value;
             foreach (var kvp in configuration.AsEnumerable())
             {
                 if (kvp.Value == null)
@@ -26,7 +28,8 @@ namespace Microsoft.Extensions.Configuration
                     continue;
                 }
                 var configPath = configPathSelector(match);
-                var configValue = configuration[configPath];
+                var defaultValue = defaultValueSelector(match);
+                var configValue = configuration[configPath] ?? defaultValue;
                 try
                 {
                     configuration[kvp.Key] = configValue;
