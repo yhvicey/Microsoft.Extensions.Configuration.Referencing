@@ -21,6 +21,20 @@ This packages allows users of `Microsoft.Extensions.Configuration.*` packages to
   "Key3": "$(Variables:Value3)", // Will be resolved to "789"
   "Key4": "$(Variables:Value4)" // Will be resolved to null
 }
+
+// appsettings.Development.json
+{
+  "Variables": {
+    "Value5": "Dev"
+  }
+}
+
+// appsettings.Production.json
+{
+  "Variables": {
+    "Value5": "Prod"
+  }
+}
 ```
 
 Usage:
@@ -28,14 +42,21 @@ Usage:
 ```csharp
 using Microsoft.Extensions.Configuration;
 
+var environment = args.FirstOrDefault();
+
 var configuration = new ConfigurationBuilder()
     .AddJsonFile("appsettings.Variables.json")
     .AddJsonFile("appsettings.json")
+    .AddJsonFile($"appsettings.{environment}.json", optional: true)
     .Build()
     .ResolveReferences(); // This method call resolves all reference tokens in '$(PATH:TO:CONFIG)' format
 
-Console.WriteLine($"Value of Key1: {configuration["Key1"]}");
-Console.WriteLine($"Value of Key2: {configuration["Key2"]}");
-Console.WriteLine($"Value of Key3: {configuration["Key3"]}");
-Console.WriteLine($"Value of non-existing key Key4: {configuration["Key4"]}");
+Console.WriteLine($"Value of Key1: {configuration["Key1"]}"); // 123
+Console.WriteLine($"Value of Key2: {configuration["Key2"]}"); // False
+Console.WriteLine($"Value of Key3: {configuration["Key3"]}"); // 789
+Console.WriteLine($"Value of non-existing key Key4: {configuration["Key4"]}"); // (empty)
+if (!string.IsNullOrEmpty(environment))
+{
+    Console.WriteLine($"Value of key Key5 in environment {environment}: {configuration["Key5"]}"); // "Prod" for Production, "Dev" for Development
+}
 ```

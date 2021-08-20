@@ -7,23 +7,29 @@ namespace Microsoft.Extensions.Configuration
     {
         private static readonly Regex ReferenceMatchingPattern = new Regex(@"\$\(([\w:]+?)\)", RegexOptions.Compiled);
 
-        public static IConfiguration ResolveReferences(this IConfiguration configuration)
+        public static IConfiguration ResolveReferences(
+            this IConfiguration configuration,
+            Regex? matchingPattern = null,
+            Func<Match, string>? configPathSelector = null)
         {
+            matchingPattern ??= ReferenceMatchingPattern;
+            configPathSelector ??= match => match.Groups[1].Value;
             foreach (var kvp in configuration.AsEnumerable())
             {
                 if (kvp.Value == null)
                 {
                     continue;
                 }
-                var match = ReferenceMatchingPattern.Match(kvp.Value);
+                var match = matchingPattern.Match(kvp.Value);
                 if (!match.Success)
                 {
                     continue;
                 }
-                var configPath = match.Groups[1].Value;
+                var configPath = configPathSelector(match);
+                var configValue = configuration[configPath];
                 try
                 {
-                    configuration[kvp.Key] = configuration[configPath];
+                    configuration[kvp.Key] = configValue;
                 }
                 catch (InvalidOperationException)
                 {
@@ -33,7 +39,7 @@ namespace Microsoft.Extensions.Configuration
                         {
                             try
                             {
-                                provider.Set(kvp.Key, configuration[configPath]);
+                                provider.Set(kvp.Key, configValue);
                             }
                             catch (InvalidOperationException)
                             {
