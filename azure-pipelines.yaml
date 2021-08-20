@@ -85,3 +85,4 @@ steps:
       nuGetFeedType: external
       publishFeedCredentials: NuGet.org
       verbosityRestore: $(BuildVerbosity)
+    continueOnError: true
