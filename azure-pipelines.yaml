@@ -1,0 +1,82 @@
+parameters:
+  - name: BuildConfiguration
+    default: Release
+    values:
+      - Release
+      - Debug
+  - name: BuildVerbosity
+    default: Minimal
+    values:
+      - Quiet
+      - Minimal
+      - Normal
+      - Detailed
+      - Diagnostic
+
+trigger:
+  batch: true
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: "windows-latest"
+
+variables:
+  # Parameters
+  BuildVerbosity: ${{ parameters.BuildVerbosity }}
+  BuildConfiguration: ${{ parameters.BuildConfiguration }}
+  # Paths
+  EnlistmentRoot: $(System.DefaultWorkingDirectory)
+  RootProject: Microsoft.Extensions.Configuration.Referencing.sln
+  DropFolder: $(EnlistmentRoot)/drop
+  # MSBuild-related props
+  DotNetSdkVersion: 6.0.100-preview.7.21379.14
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true # Skip caching packages
+
+steps:
+  - task: UseDotNet@2
+    displayName: "Install dotnet Sdk"
+    inputs:
+      packageType: "sdk"
+      version: $(DotNetSdkVersion)
+
+  - task: DotNetCoreCLI@2
+    displayName: Restore Projects - $(BuildConfiguration)
+    inputs:
+      command: restore
+      projects: $(RootProject)
+      feedsToUse: select
+
+  - task: DotNetCoreCLI@2
+    displayName: Build Projects - $(BuildConfiguration)
+    inputs:
+      command: build
+      projects: $(RootProject)
+      arguments: "--configuration $(BuildConfiguration) --no-restore --verbosity $(BuildVerbosity)"
+
+  - task: DotNetCoreCLI@2
+    displayName: Test Projects - $(BuildConfiguration)
+    inputs:
+      command: test
+      projects: $(RootProject)
+      arguments: "--configuration $(BuildConfiguration) --no-build --verbosity $(BuildVerbosity)"
+
+  - powershell: |
+      Get-ChildItem -File -Filter "*.nupkg" -Recurse | ForEach-Object {
+        $target = "$(DropFolder)/packages/$($_.Name)";
+        if (Test-Path $target) {
+          Remove-Item $target -Force;
+        }
+        Copy-Item -Force $_.FullName $target;
+      }
+    displayName: Collect Built Packages
+
+  - task: NuGetCommand@2
+    displayName: Publish Packages
+    inputs:
+      command: push
+      packagesToPush: "$(DropFolder)/**/*.nupkg;!$(DropFolder)/**/*.symbols.nupkg"
+      nuGetFeedType: external
+      publishFeedCredentials: NuGet.org
+      verbosityRestore: $(BuildVerbosity)
