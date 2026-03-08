@@ -31,15 +31,20 @@ variables:
   RootProject: Microsoft.Extensions.Configuration.Referencing.sln
   DropFolder: $(EnlistmentRoot)/drop
   # MSBuild-related props
-  DotNetSdkVersion: 6.0.100-preview.7.21379.14
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true # Skip caching packages
 
 steps:
   - task: UseDotNet@2
-    displayName: "Install dotnet Sdk"
+    displayName: "Install .NET 8 SDK"
     inputs:
       packageType: "sdk"
-      version: $(DotNetSdkVersion)
+      version: "8.x"
+
+  - task: UseDotNet@2
+    displayName: "Install .NET 10 SDK"
+    inputs:
+      packageType: "sdk"
+      version: "10.x"
 
   - task: DotNetCoreCLI@2
     displayName: Restore Projects - $(BuildConfiguration)
@@ -55,13 +60,12 @@ steps:
       projects: $(RootProject)
       arguments: "--configuration $(BuildConfiguration) --no-restore --verbosity $(BuildVerbosity)"
 
-  # Skip test for now
-  # - task: DotNetCoreCLI@2
-  #   displayName: Test Projects - $(BuildConfiguration)
-  #   inputs:
-  #     command: test
-  #     projects: $(RootProject)
-  #     arguments: "--configuration $(BuildConfiguration) --no-build --verbosity $(BuildVerbosity)"
+  - task: DotNetCoreCLI@2
+    displayName: Test Projects - $(BuildConfiguration)
+    inputs:
+      command: test
+      projects: $(RootProject)
+      arguments: "--configuration $(BuildConfiguration) --no-build --verbosity $(BuildVerbosity)"
 
   - powershell: |
       Get-ChildItem -File -Filter "*.nupkg" -Recurse | ForEach-Object {
