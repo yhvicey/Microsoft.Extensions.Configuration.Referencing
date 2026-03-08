@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace Microsoft.Extensions.Configuration
@@ -6,6 +7,11 @@ namespace Microsoft.Extensions.Configuration
     public static class IConfigurationReferencingExtensions
     {
         private static readonly Regex ReferenceMatchingPattern = new Regex(@"\$\(([\w:]+?)(,([^)]*))?\)", RegexOptions.Compiled);
+
+        /// <summary>
+        /// Maximum number of resolution passes to prevent infinite loops from circular references.
+        /// </summary>
+        private const int MaxResolutionPasses = 10;
 
         public static IConfiguration ResolveReferences(
             this IConfiguration configuration,
@@ -17,37 +23,57 @@ namespace Microsoft.Extensions.Configuration
             configPathSelector ??= match => match.Groups[1].Value;
             defaultValueSelector ??= match => match.Groups[3].Value;
 
-            foreach (var kvp in configuration.AsEnumerable())
+            // Multi-pass resolution: repeat until no unresolved references remain.
+            // This handles chained references like C -> B -> A regardless of enumeration order.
+            for (var pass = 0; pass < MaxResolutionPasses; pass++)
             {
-                if (kvp.Value == null)
+                var hasUnresolvedReferences = false;
+
+                foreach (var kvp in configuration.AsEnumerable())
                 {
-                    continue;
-                }
-                var replacedValue = matchingPattern.Replace(kvp.Value, match =>
-                {
-                    var configPath = configPathSelector(match);
-                    var defaultValue = defaultValueSelector(match);
-                    return configuration[configPath] ?? defaultValue;
-                });
-                try
-                {
-                    configuration[kvp.Key] = replacedValue;
-                }
-                catch (InvalidOperationException)
-                {
-                    if (configuration is IConfigurationRoot configurationRoot)
+                    if (kvp.Value == null || !matchingPattern.IsMatch(kvp.Value))
                     {
-                        foreach (var provider in configurationRoot.Providers)
+                        continue;
+                    }
+
+                    var replacedValue = matchingPattern.Replace(kvp.Value, match =>
+                    {
+                        var configPath = configPathSelector(match);
+                        var defaultValue = defaultValueSelector(match);
+                        return configuration[configPath] ?? defaultValue;
+                    });
+
+                    // Check if any references remain unresolved after substitution
+                    if (matchingPattern.IsMatch(replacedValue))
+                    {
+                        hasUnresolvedReferences = true;
+                    }
+
+                    try
+                    {
+                        configuration[kvp.Key] = replacedValue;
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        if (configuration is IConfigurationRoot configurationRoot)
                         {
-                            try
+                            foreach (var provider in configurationRoot.Providers)
                             {
-                                provider.Set(kvp.Key, replacedValue);
-                            }
-                            catch (InvalidOperationException)
-                            {
+                                try
+                                {
+                                    provider.Set(kvp.Key, replacedValue);
+                                }
+                                catch (InvalidOperationException)
+                                {
+                                }
                             }
                         }
                     }
+                }
+
+                if (!hasUnresolvedReferences)
+                {
+                    break;
                 }
             }
 
