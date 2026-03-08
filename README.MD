@@ -1,6 +1,6 @@
 # Microsoft.Extensions.Configuration.Referencing
 
-[![Build Status](https://dev.azure.com/vicey/GithubProjectsCICD/_apis/build/status/yhvicey.Microsoft.Extensions.Configuration.Referencing?branchName=main)](https://dev.azure.com/vicey/GithubProjectsCICD/_build/latest?definitionId=11&branchName=main)
+[![CI](https://github.com/yhvicey/Microsoft.Extensions.Configuration.Referencing/actions/workflows/ci.yml/badge.svg)](https://github.com/yhvicey/Microsoft.Extensions.Configuration.Referencing/actions/workflows/ci.yml)
 
 [![NuGet Status](https://buildstats.info/nuget/yiwwan.Microsoft.Extensions.Configuration.Referencing)](https://www.nuget.org/packages/yiwwan.Microsoft.Extensions.Configuration.Referencing/)
 
