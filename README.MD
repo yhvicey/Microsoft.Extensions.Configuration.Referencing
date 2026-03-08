@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/yhvicey/Microsoft.Extensions.Configuration.Referencing/actions/workflows/ci.yml/badge.svg)](https://github.com/yhvicey/Microsoft.Extensions.Configuration.Referencing/actions/workflows/ci.yml)
 
-[![NuGet Status](https://buildstats.info/nuget/yiwwan.Microsoft.Extensions.Configuration.Referencing)](https://www.nuget.org/packages/yiwwan.Microsoft.Extensions.Configuration.Referencing/)
+![NuGet Version](https://img.shields.io/nuget/v/yiwwan.Microsoft.Extensions.Configuration.Referencing)
 
 This packages allows users of `Microsoft.Extensions.Configuration.*` packages to reference config values within same configuration instance, e.g.:
 
